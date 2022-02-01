@@ -1,4 +1,5 @@
 import 'package:awesome_dialog/awesome_dialog.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:date_picker_timeline/date_picker_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_beautiful_popup/main.dart';
@@ -137,7 +138,7 @@ class _TodoState extends State<Todo> {
                                   return;
                                 } else {
                                   setState(() {
-                                    dueDate = selectedDate;
+                                    dueDate = (selectedDate);
                                     submitDate = DateTime.now();
                                   });
                                 }

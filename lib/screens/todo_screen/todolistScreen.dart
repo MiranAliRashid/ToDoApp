@@ -1,10 +1,12 @@
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:todo_app/dataModel/todoModel.dart';
 import 'package:todo_app/provider/tododate/todoData.dart';
+import 'package:intl/intl.dart';
 
 class todoScreen extends StatefulWidget {
   todoScreen({Key? key}) : super(key: key);
@@ -19,14 +21,41 @@ class _todoScreenState extends State<todoScreen> {
     SharedPreferences preferences = await SharedPreferences.getInstance();
     List<String>? saved = preferences.getStringList('Todos');
 
-    List<Todo> savedllist = saved!.map((data) {
-      return Todo.fromMap(jsonDecode(data));
-    }).toList();
-
-    savedllist.forEach((element) {
-      Provider.of<TodoData>(context, listen: false).dataaysnc(element.title!,
-          element.content!, element.dueDate!, element.submitDate!);
-    });
+    if (saved == null) {
+      debugPrint('this firebase code aycn woekinggggg ======================<');
+      FirebaseFirestore firestore = FirebaseFirestore.instance;
+      firestore.collection('Todos').get().then(
+        (value) async {
+          for (int i = 0; i < value.docs.length; i++) {
+            Provider.of<TodoData>(context, listen: false).addToDo(
+              value.docs[i]['title'],
+              value.docs[i]['content'],
+              (value.docs[i]['dueDate']).toDate(),
+              (value.docs[i]['submitDate']).toDate(),
+              add_to_firebase: false,
+            );
+          }
+        },
+      );
+    } else {
+      debugPrint(
+          'this sheard pre ff code aycn woekinggggg ======================<');
+      try {
+        List<Todo> savedllist = saved.map((data) {
+          return Todo.fromMap(jsonDecode(data));
+        }).toList();
+        debugPrint(savedllist.toString());
+        savedllist.forEach((element) {
+          Provider.of<TodoData>(context, listen: false).dataaysnc(
+              element.title!,
+              element.content!,
+              element.dueDate!,
+              element.submitDate!);
+        });
+      } catch (e) {
+        debugPrint(e.toString());
+      }
+    }
   }
 
   void initState() {
@@ -58,7 +87,8 @@ class _todoScreenState extends State<todoScreen> {
                     itemBuilder: (BuildContext context, int index) {
                       return Container(
                         decoration: BoxDecoration(
-                          color: Colors.grey[200],
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(10),
                           boxShadow: [
                             BoxShadow(
                                 color: Colors.grey,
@@ -92,15 +122,19 @@ class _todoScreenState extends State<todoScreen> {
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
                                 Text(
-                                    Provider.of<TodoData>(context, listen: true)
-                                        .Todos[index]
-                                        .dueDate
-                                        .toString()),
+                                  DateFormat('dd-MM-yyyy').format(
+                                      Provider.of<TodoData>(context,
+                                              listen: true)
+                                          .Todos[index]
+                                          .dueDate!),
+                                ),
                                 Text(
-                                    Provider.of<TodoData>(context, listen: true)
-                                        .Todos[index]
-                                        .submitDate
-                                        .toString())
+                                  DateFormat('dd-MM-yyyy').format(
+                                      Provider.of<TodoData>(context,
+                                              listen: true)
+                                          .Todos[index]
+                                          .submitDate!),
+                                ),
                               ],
                             ),
                           ],
